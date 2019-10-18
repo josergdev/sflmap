@@ -1,4 +1,4 @@
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCDlxpbjZg-N2PlzHkmBxKyU5AHSeU3xVM&extension=.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=&extension=.js"></script>
 <link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet"/>
 
 <!-- Assets from CDN -->
@@ -446,8 +446,9 @@
   }
 
   async function getLocations() {
-    let sheetId = "1FI6IrFr4ZiubKkt7fZIvwsMdtQAmqMII0uwhymwjeb0";
-    let sheetUrl = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetId + "/?key=AIzaSyCy9jC9OBPL2v1MGkJL9p_N11kp1zyfPCo&includeGridData=true";
+    let keyInfo = ""
+    let sheetId = "1CM459UUMW2IOhO6ke73YYSnviNtok0wqnvdbJZHW5cM";
+    let sheetUrl = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetId + "/?key=" + keyInfo + "&includeGridData=true";
     let response = await fetch(sheetUrl);
     let data = await response.json();
     let sheet = data.sheets[0].data[0].rowData;
