@@ -1,682 +1,493 @@
-<script src="https://maps.googleapis.com/maps/api/js?key=&extension=.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCDlxpbjZg-N2PlzHkmBxKyU5AHSeU3xVM&extension=.js"></script>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet"/>
+
+<!-- Assets from CDN -->
 <script src="https://cdn.rawgit.com/josergfc/sflmap/master/infobox.js"></script>
-<link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
-<link href="https://cdn.rawgit.com/josergfc/sflmap/master/infobox.css" rel="stylesheet" >
+<link href="https://cdn.rawgit.com/josergfc/sflmap/master/infobox.css" rel="stylesheet"/>
+
+<!-- Assets from Localhost -->
+<!-- <script src="/infobox.js"></script>
+<link href="/infobox.css" rel="stylesheet"/> -->
 
 <script>
-    google.maps.event.addDomListener(window, 'load', init);
-    var map, markersArray = [];
+  google.maps.event.addDomListener(window, "load", init);
+  var map,
+    markersArray = [];
 
-    function bindInfoWindow(marker, map, location) {
-        google.maps.event.addListener(marker, 'click', function() {
-            function close(location) {
-                location.ib.close();
-                location.infoWindowVisible = false;
-                location.ib = null;
-            }
+  function bindInfoWindow(marker, map, location) {
+    google.maps.event.addListener(marker, "click", function() {
+      function close(location) {
+        location.ib.close();
+        location.infoWindowVisible = false;
+        location.ib = null;
+      }
 
-            if (location.infoWindowVisible === true) {
-                close(location);
-            } else {
-                markersArray.forEach(function(loc, index){
-                    if (loc.ib && loc.ib !== null) {
-                        close(loc);
-                    }
-                });
-
-                var boxText = document.createElement('div');
-                boxText.style.cssText = 'background: #fff;';
-                boxText.classList.add('md-whiteframe-2dp');
-
-                function buildPieces(location, el, part, icon) {
-                    if (location[part] === '') {
-                        return '';
-                    } else if (location.iw[part]) {
-                        switch(el){
-                            case 'photo':
-                                if (location.photo){
-                                    return '<div class="iw-photo" style="background-image: url(' + location.photo + ');"></div>';
-                                 } else {
-                                    return '';
-                                }
-                                break;
-                            case 'iw-toolbar':
-                                return '<div class="iw-toolbar"><h3 class="md-subhead">' + location.title + '</h3></div>';
-                                break;
-                            case 'div':
-                                switch(part){
-                                    case 'email':
-                                        return '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/email.svg"/></i><span><a href="mailto:' + location.email + '" target="_blank">' + location.email + '</a></span></div>';
-                                        break;
-                                    case 'web':
-                                        return '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/web.svg"/></i><span><a href="' + location.web + '" target="_blank">' + location.web_formatted + '</a></span></div>';
-                                        break;
-                                    case 'twitter':
-                                        return '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/twitter.svg"/></i><span><a href="https://twitter.com/' + location.twitter + '" target="_blank">' + location.twitter_formatted + '</a></span></div>';
-                                        break;
-                                    case 'facebook':
-                                        return '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/facebook.svg"/></i><span><a href="https://www.facebook.com/' + location.facebook + '" target="_blank">' + location.facebook_formatted + '</a></span></div>';
-                                        break;
-                                    case 'instagram':
-                                        return '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/instagram.svg"/></i><span><a href="https://www.instagram.com/' + location.instagram + '" target="_blank">' + location.instagram_formatted + '</a></span></div>';
-                                        break;
-                                    case 'desc':
-                                        return '<label class="iw-desc" for="cb_details"><input type="checkbox" id="cb_details"/><h3 class="iw-x-details">Details</h3><i class="material-icons toggle-open-details"><img src="//cdn.mapkit.io/v1/icons/' + icon + '.svg"/></i><p class="iw-x-details">' + location.desc + '</p></label>';
-                                        break;
-                                    case 'admin':
-                                        return '<div class="iw-details"><i class="material-icons"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/user.svg"/></i><span>' + location[part] + '</span></div>';
-                                        break;
-                                    default:
-                                        return '<div class="iw-details"><i class="material-icons"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/twitter.svg"/></i><span>' + location[part] + '</span></div>';
-                                    break;
-                                }
-                                break;
-                            case 'open_hours':
-                                var items = '';
-                                if (location.open_hours.length > 0){
-                                    for (var i = 0; i < location.open_hours.length; ++i) {
-                                        if (i !== 0){
-                                            items += '<li><strong>' + location.open_hours[i].day + '</strong><strong>' + location.open_hours[i].hours +'</strong></li>';
-                                        }
-                                        var first = '<li><label for="cb_hours"><input type="checkbox" id="cb_hours"/><strong>' + location.open_hours[0].day + '</strong><strong>' + location.open_hours[0].hours +'</strong><i class="material-icons toggle-open-hours"><img src="//cdn.mapkit.io/v1/icons/keyboard_arrow_down.svg"/></i><ul>' + items + '</ul></label></li>';
-                                    }
-                                    return '<div class="iw-list"><i class="material-icons first-material-icons" style="color:#4285f4;"><img src="//cdn.mapkit.io/v1/icons/' + icon + '.svg"/></i><ul>' + first + '</ul></div>';
-                                 } else {
-                                    return '';
-                                }
-                                break;
-                         }
-                    } else {
-                        return '';
-                    }
-                }
-
-                boxText.innerHTML =
-                    buildPieces(location, 'photo', 'photo', '') +
-                    buildPieces(location, 'iw-toolbar', 'title', '') +
-                    buildPieces(location, 'div', 'admin', 'admin') +
-                    buildPieces(location, 'div', 'email', 'email') +
-                    buildPieces(location, 'div', 'web', 'public') +
-                    buildPieces(location, 'div', 'twitter', 'public') +
-                    buildPieces(location, 'div', 'facebook', 'public') +
-                    buildPieces(location, 'div', 'instagram', 'public') +
-                    buildPieces(location, 'div', 'tel', 'phone') +
-                    buildPieces(location, 'div', 'int_tel', 'phone') +
-                    buildPieces(location, 'open_hours', 'open_hours', 'access_time') +
-                    buildPieces(location, 'div', 'desc', 'keyboard_arrow_down');
-
-                var myOptions = {
-                    alignBottom: true,
-                    content: boxText,
-                    disableAutoPan: true,
-                    maxWidth: 0,
-                    pixelOffset: new google.maps.Size(-140, -40),
-                    zIndex: null,
-                    boxStyle: {
-                        opacity: 1,
-                        width: '280px'
-                    },
-                    closeBoxMargin: '0px 0px 0px 0px',
-                    infoBoxClearance: new google.maps.Size(1, 1),
-                    isHidden: false,
-                    pane: 'floatPane',
-                    enableEventPropagation: false
-                };
-
-                location.ib = new InfoBox(myOptions);
-                location.ib.open(map, marker);
-                location.infoWindowVisible = true;
-            }
+      if (location.infoWindowVisible === true) {
+        close(location);
+      } else {
+        markersArray.forEach(function(loc, index) {
+          if (loc.ib && loc.ib !== null) {
+            close(loc);
+          }
         });
-    }
 
-    function init() {
-        var mapOptions = {
-            center: new google.maps.LatLng(39.62261532318648,-3.2775889375000133),
-            zoom: 5,
-            gestureHandling: 'auto',
-            fullscreenControl: false,
-            zoomControl: true,
-            disableDoubleClickZoom: true,
-            mapTypeControl: false,
-            scaleControl: false,
-            scrollwheel: false,
-            streetViewControl: false,
-            draggable : true,
-            clickableIcons: false,
-            mapTypeId: google.maps.MapTypeId.ROADMAP,
-            styles: [
-    {
-        "featureType": "administrative",
-        "elementType": "labels",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "administrative.country",
-        "elementType": "geometry.stroke",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "administrative.province",
-        "elementType": "geometry.stroke",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "landscape",
-        "elementType": "geometry",
-        "stylers": [
-            {
-                "visibility": "on"
-            },
-            {
-                "color": "#e3e3e3"
-            }
-        ]
-    },
-    {
-        "featureType": "landscape.natural",
-        "elementType": "labels",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "poi",
-        "elementType": "all",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "road",
-        "elementType": "all",
-        "stylers": [
-            {
-                "color": "#cccccc"
-            }
-        ]
-    },
-    {
-        "featureType": "road",
-        "elementType": "labels",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "transit",
-        "elementType": "labels.icon",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "transit.line",
-        "elementType": "geometry",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "transit.line",
-        "elementType": "labels.text",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "transit.station.airport",
-        "elementType": "geometry",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "transit.station.airport",
-        "elementType": "labels",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    },
-    {
-        "featureType": "water",
-        "elementType": "geometry",
-        "stylers": [
-            {
-                "color": "#FFFFFF"
-            }
-        ]
-    },
-    {
-        "featureType": "water",
-        "elementType": "labels",
-        "stylers": [
-            {
-                "visibility": "off"
-            }
-        ]
-    }
-]
-        }
-        var mapElement = document.getElementById('mapkit-3925');
-        var map = new google.maps.Map(mapElement, mapOptions);
-        var locations = [
-            {
-            "title":"SFL Alicante",
-            "admin":"Vicente Antón",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"esflalicante@gmail.com",
-            "web":"prueba web","web_formatted":"prueba web",
-            "twitter_formatted":"@SFLAlicante","twitter":"SFLAlicante",
-            "facebook_formatted":"@SFLAlicante","facebook":"SFLAlicante",
-            "instagram_formatted":"@SFLAlicante","instagram":"sflalicante",
-            "lat":38.3459963,"lng":-0.4906855000000405,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL Asturias",
-            "admin":"Daniel Rodero",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"esfl.asturias@gmail.com",
-            "web":"prueba web","web_formatted":"prueba web",
-            "twitter_formatted":"@SFLAsturias","twitter":"SFLAsturias",
-            "facebook_formatted":"@ESFLAsturias","facebook":"ESFLAsturias",
-            "instagram_formatted":"@SFLAsturias","instagram":"sflalicante",
-            "lat":43.3613953,"lng":-5.859326699999997,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Barcelona",
-            "admin":"María Claver",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"rrhh@sflbarcelona.org",
-            "web":"http://www.sflbarcelona.org/","web_formatted":"www.sflbarcelona.org",
-            "twitter_formatted":"@SFLBarcelona","twitter":"SFLBarcelona",
-            "facebook_formatted":"@StudentsForLibertyBarcelona","facebook":"StudentsForLibertyBarcelona",
-            "instagram_formatted":"@sfl.barcelona","instagram":"sfl.barcelona",
-            "lat":41.38506389999999,"lng":2.1734034999999494,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":true,"twitter":true,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL Madrid",
-            "admin":"David Arias",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"sflmadrid@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLMadrid","twitter":"SFLMadrid",
-            "facebook_formatted":"@StudentsForLibertyMadrid","facebook":"StudentsForLibertyMadrid",
-            "instagram_formatted":"@sflmadrid","instagram":"sflmadrid",
-            "lat":40.4379332,"lng":-3.749576,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":true,"twitter":true,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL Cantabria",
-            "admin":"Marcos Pelayo",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"esfl_cantabria@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLCantabria","twitter":"SFLCantabria",
-            "facebook_formatted":"@ESFLCantabria","facebook":"ESFL Cantabria",
-            "instagram_formatted":"@sfltenerife","instagram":"sfltenerife",
-            "lat":43.1828396,"lng":-3.9878426999999874,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Tenerife",
-            "admin":"Juan Taborcia",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"juan@taborcia.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLTenerife","twitter":"SFLTenerife",
-            "facebook_formatted":"@SFLTenerife","facebook":"SFLTenerife",
-            "instagram_formatted":"@sfltenerife","instagram":"sfltenerife",
-            "lat":28.29156369999999,"lng":-16.629130400000008,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL León",
-            "admin":"Jorge Suárez",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"uleforliberty@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFL_Leon","twitter":"SFL_Leon",
-            "facebook_formatted":"@SFLUle","facebook":"SFLUle",
-            "instagram_formatted":"@sfltenerife","instagram":"sfltenerife",
-            "lat":42.5987263,"lng":-5.567095900000027,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Extremadura",
-            "admin":"Jorge Suárez",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"uleforliberty@gmail.com",
-            "web":"http://esflextremadura.blogspot.com.es/","web_formatted":"esflextremadura.blogspot.com.es",
-            "twitter_formatted":"@esflunex","twitter":"esflunex",
-            "facebook_formatted":"/SFLExtremadura","facebook":"SFLExtremadura",
-            "instagram_formatted":"@sfltenerife","instagram":"sfltenerife",
-            "lat":39.4937392,"lng":-6.067919399999937,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":false,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":true,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Galicia",
-            "admin":"Santiago Calvo",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"infosflgalicia@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLGalicia","twitter":"SFLGalicia",
-            "facebook_formatted":"@ESFLCompostela","facebook":"ESFLCompostela",
-            "instagram_formatted":"@sfltenerife","instagram":"sfltenerife",
-            "lat":42.5750554,"lng":-8.133855799999992,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Salamanca",
-            "admin":"Adrían Rodríguez",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"esflusal@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLSalamanca","twitter":"SFLSalamanca",
-            "facebook_formatted":"@sflSalamanca","facebook":"sflSalamanca",
-            "instagram_formatted":"@sfltenerife","instagram":"sfltenerife",
-            "lat":40.9701039,"lng":-5.663539700000001,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Sevilla",
-            "admin":"Rafael González",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"studentsforlibertysevilla@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLSevilla","twitter":"SFLSevilla",
-            "facebook_formatted":"@SFLSevilla","facebook":"SFLSevilla",
-            "instagram_formatted":"@sfltenerife","instagram":"sfltenerife",
-            "lat":37.3890924,"lng":-5.984458899999936,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Valencia",
-            "admin":"Rubén Herrera / Quique García",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"valencia.esfl@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFL_Valencia","twitter":"SFL_Valencia",
-            "facebook_formatted":"@SFLVLC","facebook":"SFLVLC",
-            "instagram_formatted":"@sflvalencia","instagram":"sflvalencia",
-            "lat":39.4699075,"lng":-0.3762881000000107,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL Zaragoza",
-            "admin":"Luís Ciurana / Dieter Vásquez",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"esflzgz@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLZaragoza","twitter":"SFLZaragoza",
-            "facebook_formatted":"@SFLZaragoza","facebook":"SFLZaragoza",
-            "instagram_formatted":"@sflvalencia","instagram":"sflvalencia",
-            "lat":41.64882259999999,"lng":-0.8890853000000334,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Jaén",
-            "admin":"Julio Pérez",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"julioperezrdlf@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLJaen","twitter":"SFLJaen",
-            "facebook_formatted":"@StudentsForLibertyJaen","facebook":"StudentsForLibertyJaen",
-            "instagram_formatted":"@sflvalencia","instagram":"sflvalencia",
-            "lat":37.7795941,"lng":-3.7849056999999675,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Euskadi",
-            "admin":"María García",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"sfleuskadi@gmail.com",
-            "web":"http://www.sflmadrid.com/","web_formatted":"www.sflmadrid.com",
-            "twitter_formatted":"@SFLEuskadi","twitter":"SFLEuskadi",
-            "facebook_formatted":"@SFLEuskadi","facebook":"SFLEuskadi",
-            "instagram_formatted":"@sflvalencia","instagram":"sflvalencia",
-            "lat":42.9896248,"lng":-2.6189272999999957,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Murcia",
-            "admin":"Guillermo Valdesueiro",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"sflmurcia@gmail.com",
-            "web":"https://sflmurcia.wordpress.com/","web_formatted":"sflmurcia.wordpress.com",
-            "twitter_formatted":"@SFLMurcia","twitter":"SFLMurcia",
-            "facebook_formatted":"@SFLMurcia","facebook":"SFLMurcia",
-            "instagram_formatted":"@sflmurcia","instagram":"sflmurcia",
-            "lat":37.9748133,"lng":-1.1315273000000161,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":true,"twitter":true,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL Valladolid",
-            "admin":"Luís Valbuena",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"sflvalladolid@gmail.com",
-            "web":"https://sflmurcia.wordpress.com/","web_formatted":"sflmurcia.wordpress.com",
-            "twitter_formatted":"@sflvalladolid","twitter":"sflvalladolid",
-            "facebook_formatted":"@SFLValladolid","facebook":"SFL-Valladolid-870854886395267",
-            "instagram_formatted":"@sflvalladolid","instagram":"sflvalladolid",
-            "lat":41.652251,"lng":-4.724532100000033,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL La Rioja",
-            "admin":"Francisco Nunes",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"sfllarioja@gmail.com",
-            "web":"https://sflmurcia.wordpress.com/","web_formatted":"sflmurcia.wordpress.com",
-            "twitter_formatted":"@sflvalladolid","twitter":"sflvalladolid",
-            "facebook_formatted":"@SFLValladolid","facebook":"SFL-Valladolid-870854886395267",
-            "instagram_formatted":"@sflvalladolid","instagram":"sflvalladolid",
-            "lat":42.28707329999999,"lng":-2.5396029999999428,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":false,"facebook":false,"instagram":false}
-            },
-            {
-            "title":"SFL Málaga",
-            "admin":"Luis Olalla",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"sflmalaga@gmail.com",
-            "web":"https://sflmurcia.wordpress.com/","web_formatted":"sflmurcia.wordpress.com",
-            "twitter_formatted":"@SFLMalaga","twitter":"SFLMalaga",
-            "facebook_formatted":"@SFLmalagaUMA","facebook":"SFLmalagaUMA",
-            "instagram_formatted":"@sflvalladolid","instagram":"sflvalladolid",
-            "lat":36.721261,"lng":-4.421265500000004,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":true,"instagram":false}
-            },
-            {
-            "title":"SFL Córdoba",
-            "admin":"Manuel Benítez",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"sfluma@gmail.com",
-            "web":"https://sflmurcia.wordpress.com/","web_formatted":"sflmurcia.wordpress.com",
-            "twitter_formatted":"@SFLMalaga","twitter":"SFLMalaga",
-            "facebook_formatted":"@SFLCordoba","facebook":"SFLCordoba",
-            "instagram_formatted":"@sflcordoba","instagram":"sflcordoba",
-            "lat":37.8881751,"lng":-4.7793834999999945,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":false,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":false,"facebook":true,"instagram":true}
-            },
-            {
-            "title":"SFL Granada",
-            "admin":"Eduardo Lanseros",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"esflgranadaa@gmail.com",
-            "web":"https://sflmurcia.wordpress.com/","web_formatted":"sflmurcia.wordpress.com",
-            "twitter_formatted":"@ESFLGranada","twitter":"ESFLGranada",
-            "facebook_formatted":"@SFLCordoba","facebook":"SFLCordoba",
-            "instagram_formatted":"@esflgranada","instagram":"esflgranada",
-            "lat":37.1773363,"lng":-3.5985570999999936,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":true,"facebook":false,"instagram":true}
-            },
-            {
-            "title":"SFL Portugal",
-            "admin":"Jorge Miguel Teixeira / Francisco García",
-            "desc":"prueba details",
-            "tel":"prueba telefono",
-            "int_tel":"prueba int telefono",
-            "email":"fgarcia@studentsforliberty.org",
-            "web":"https://sflmurcia.wordpress.com/","web_formatted":"sflmurcia.wordpress.com",
-            "twitter_formatted":"@ESFLGranada","twitter":"ESFLGranada",
-            "facebook_formatted":"@studentsforlibertyportugal","facebook":"studentsforlibertyportugal",
-            "instagram_formatted":"@esflgranada","instagram":"esflgranada",
-            "lat":38.7222524,"lng":-9.139336599999979,
-            "vicinity":"",
-            "open":"","time":"","open_hours":"","marker":{"fillColor":"#F44336","fillOpacity":1,"strokeWeight":0,"scale":1.5,"path":"M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z","anchor":{"x":10,"y":30},"origin":{"x":0,"y":0},"style":0},
-            "iw":{"admin":true,"desc":false,"email":true,"enable":true,"int_tel":false,"open":true,"open_hours":true,"photo":true,"tel":false,"title":true,"web":false,"twitter":false,"facebook":true,"instagram":false}
-            }
-        ];
-        for (i = 0; i < locations.length; i++) {
-            marker = new google.maps.Marker({
-                icon: 'http://www.esflspain.org/wp-content/uploads/2018/01/marker.png',
-                position: new google.maps.LatLng(locations[i].lat, locations[i].lng),
-                map: map,
-                title: locations[i].title,
-                admin: locations[i].admin,
-                desc: locations[i].desc,
-                tel: locations[i].tel,
-                int_tel: locations[i].int_tel,
-                vicinity: locations[i].vicinity,
-                open: locations[i].open,
-                open_hours: locations[i].open_hours,
-                photo: locations[i].photo,
-                time: locations[i].time,
-                email: locations[i].email,
-                web: locations[i].web,
-                twitter: locations[i].twitter,
-                facebook: locations[i].facebook,
-                instagram: locations[i].instagram,
-                iw: locations[i].iw
-            });
-            markersArray.push(marker);
+        var boxText = document.createElement("div");
+        boxText.style.cssText = "background: #fff;";
+        boxText.classList.add("md-whiteframe-2dp");
 
-            if (locations[i].iw.enable === true){
-                bindInfoWindow(marker, map, locations[i]);
+        function buildPieces(location, el, part, icon) {
+          if (location[part] === "") {
+            return "";
+          } else if (location.iw[part]) {
+            switch (el) {
+              case "photo":
+                if (location.photo) {
+                  return (
+                    '<div class="iw-photo" style="background-image: url(' +
+                    location.photo +
+                    ');"></div>'
+                  );
+                } else {
+                  return "";
+                }
+                break;
+              case "iw-toolbar":
+                return (
+                  '<div class="iw-toolbar"><h3 class="md-subhead">' +
+                  location.title +
+                  "</h3></div>"
+                );
+                break;
+              case "div":
+                switch (part) {
+                  case "email":
+                    return (
+                      '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/email.svg"/></i><span><a href="mailto:' +
+                      location.email +
+                      '" target="_blank">' +
+                      location.email +
+                      "</a></span></div>"
+                    );
+                    break;
+                  case "web":
+                    return (
+                      '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/web.svg"/></i><span><a href="' +
+                      location.web +
+                      '" target="_blank">' +
+                      location.web_formatted +
+                      "</a></span></div>"
+                    );
+                    break;
+                  case "twitter":
+                    return (
+                      '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/twitter.svg"/></i><span><a href="' +
+                      location.twitter_link +
+                      '" target="_blank">' +
+                      location.twitter +
+                      "</a></span></div>"
+                    );
+                    break;
+                  case "facebook":
+                    return (
+                      '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/facebook.svg"/></i><span><a href="' +
+                      location.facebook_link +
+                      '" target="_blank">' +
+                      location.facebook +
+                      "</a></span></div>"
+                    );
+                    break;
+                  case "instagram":
+                    return (
+                      '<div class="iw-details"><i class="material-icons" style="color:#4285f4;"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/instagram.svg"/></i><span><a href="' +
+                      location.instagram_link +
+                      '" target="_blank">' +
+                      location.instagram +
+                      "</a></span></div>"
+                    );
+                    break;
+                  case "desc":
+                    return (
+                      '<label class="iw-desc" for="cb_details"><input type="checkbox" id="cb_details"/><h3 class="iw-x-details">Details</h3><i class="material-icons toggle-open-details"><img src="//cdn.mapkit.io/v1/icons/' +
+                      icon +
+                      '.svg"/></i><p class="iw-x-details">' +
+                      location.desc +
+                      "</p></label>"
+                    );
+                    break;
+                  case "admin":
+                    return (
+                      '<div class="iw-details"><i class="material-icons"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/user.svg"/></i><span>' +
+                      location[part] +
+                      "</span></div>"
+                    );
+                    break;
+                  default:
+                    return (
+                      '<div class="iw-details"><i class="material-icons"><img src="http://www.esflspain.org/wp-content/uploads/2018/01/twitter.svg"/></i><span>' +
+                      location[part] +
+                      "</span></div>"
+                    );
+                    break;
+                }
+                break;
+              case "open_hours":
+                var items = "";
+                if (location.open_hours.length > 0) {
+                  for (var i = 0; i < location.open_hours.length; ++i) {
+                    if (i !== 0) {
+                      items +=
+                        "<li><strong>" +
+                        location.open_hours[i].day +
+                        "</strong><strong>" +
+                        location.open_hours[i].hours +
+                        "</strong></li>";
+                    }
+                    var first =
+                      '<li><label for="cb_hours"><input type="checkbox" id="cb_hours"/><strong>' +
+                      location.open_hours[0].day +
+                      "</strong><strong>" +
+                      location.open_hours[0].hours +
+                      '</strong><i class="material-icons toggle-open-hours"><img src="//cdn.mapkit.io/v1/icons/keyboard_arrow_down.svg"/></i><ul>' +
+                      items +
+                      "</ul></label></li>";
+                  }
+                  return (
+                    '<div class="iw-list"><i class="material-icons first-material-icons" style="color:#4285f4;"><img src="//cdn.mapkit.io/v1/icons/' +
+                    icon +
+                    '.svg"/></i><ul>' +
+                    first +
+                    "</ul></div>"
+                  );
+                } else {
+                  return "";
+                }
+                break;
             }
+          } else {
+            return "";
+          }
         }
+
+        boxText.innerHTML =
+          buildPieces(location, "photo", "photo", "") +
+          buildPieces(location, "iw-toolbar", "title", "") +
+          buildPieces(location, "div", "admin", "admin") +
+          buildPieces(location, "div", "email", "email") +
+          buildPieces(location, "div", "web", "public") +
+          buildPieces(location, "div", "twitter", "public") +
+          buildPieces(location, "div", "facebook", "public") +
+          buildPieces(location, "div", "instagram", "public") +
+          buildPieces(location, "div", "tel", "phone") +
+          buildPieces(location, "div", "int_tel", "phone") +
+          buildPieces(location, "open_hours", "open_hours", "access_time") +
+          buildPieces(location, "div", "desc", "keyboard_arrow_down");
+
+        var myOptions = {
+          alignBottom: true,
+          content: boxText,
+          disableAutoPan: true,
+          maxWidth: 0,
+          pixelOffset: new google.maps.Size(-140, -40),
+          zIndex: null,
+          boxStyle: {
+            opacity: 1,
+            width: "280px"
+          },
+          closeBoxMargin: "0px 0px 0px 0px",
+          infoBoxClearance: new google.maps.Size(1, 1),
+          isHidden: false,
+          pane: "floatPane",
+          enableEventPropagation: false
+        };
+
+        location.ib = new InfoBox(myOptions);
+        location.ib.open(map, marker);
+        location.infoWindowVisible = true;
+      }
+    });
+  }
+
+  function init() {
+    var mapOptions = {
+      center: new google.maps.LatLng(39.62261532318648, -3.2775889375000133),
+      zoom: 5,
+      gestureHandling: "auto",
+      fullscreenControl: false,
+      zoomControl: true,
+      disableDoubleClickZoom: true,
+      mapTypeControl: false,
+      scaleControl: false,
+      scrollwheel: false,
+      streetViewControl: false,
+      draggable: true,
+      clickableIcons: false,
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
+      styles: [
+        {
+          featureType: "administrative",
+          elementType: "labels",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "administrative.country",
+          elementType: "geometry.stroke",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "administrative.province",
+          elementType: "geometry.stroke",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "landscape",
+          elementType: "geometry",
+          stylers: [
+            {
+              visibility: "on"
+            },
+            {
+              color: "#e3e3e3"
+            }
+          ]
+        },
+        {
+          featureType: "landscape.natural",
+          elementType: "labels",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "poi",
+          elementType: "all",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "road",
+          elementType: "all",
+          stylers: [
+            {
+              color: "#cccccc"
+            }
+          ]
+        },
+        {
+          featureType: "road",
+          elementType: "labels",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "transit",
+          elementType: "labels.icon",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "transit.line",
+          elementType: "geometry",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "transit.line",
+          elementType: "labels.text",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "transit.station.airport",
+          elementType: "geometry",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "transit.station.airport",
+          elementType: "labels",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        },
+        {
+          featureType: "water",
+          elementType: "geometry",
+          stylers: [
+            {
+              color: "#FFFFFF"
+            }
+          ]
+        },
+        {
+          featureType: "water",
+          elementType: "labels",
+          stylers: [
+            {
+              visibility: "off"
+            }
+          ]
+        }
+      ]
+    };
+    var mapElement = document.getElementById("mapkit-3925");
+    var map = new google.maps.Map(mapElement, mapOptions);
+    var marker = {
+      fillColor: "#F44336",
+      fillOpacity: 1,
+      strokeWeight: 0,
+      scale: 1.5,
+      path:
+        "M10.2,2.5v4.2c0,0,0,0,0,0L10.2,2.5c-6,0-10.9,4.9-10.9,10.9s10.9,23.8,10.9,23.8v0c0,0,10.9-17.8,10.9-23.8 S16.2,2.5,10.2,2.5z M10.2,17.9c-2.5,0-4.6-2.1-4.6-4.6s2.1-4.6,4.6-4.6s4.6,2.1,4.6,4.6S12.8,17.9,10.2,17.9z M16.8,14.1 c0-0.2,0-0.3,0-0.5C16.9,13.8,16.9,14,16.8,14.1z",
+      anchor: { x: 10, y: 30 },
+      origin: { x: 0, y: 0 },
+      style: 0
     }
+    getLocations().then(locations => {
+      return locations.map(location => {
+        return {
+          title: location["Grupo_Local"],
+          admin: location["Nombre"],
+          email: location["Email"],
+          twitter: location["Twitter"],
+          twitter_link: location["Twitter_Link"],
+          facebook: location["Facebook"],
+          facebook_link: location["Facebook_Link"],
+          instagram: location["Instagram"],
+          instagram_link: location["Instagram_Link"],
+          lat: location["Latitude"],
+          lng: location["Longitude"],
+          desc: "",
+          tel: "",
+          int_tel: "",
+          web: "",
+          web_formatted: "",
+          marker: marker,
+          iw: {
+            enable: location["Display"] === "Enable" ? true : false,
+            title: location["Grupo_Local"] ? true : false,
+            admin: location["Nombre"] ? true : false,
+            email: location["Email"] ? true : false,
+            twitter: (location["Twitter"] == null || location["Twitter_Link"] == null) ? false : true,
+            facebook: (location["Facebook"] == null || location["Facebook_Link"] == null) ? false : true,
+            instagram: (location["Instagram"] == null || location["Instagram_Link"] == null) ? false : true,
+            desc: false,
+            tel: false,
+            int_tel: false,
+            open: false,
+            open_hours: false,
+            photo: false,
+            web: false
+          }
+        };
+      });
+    }).then(locations => {
+      for (i = 0; i < locations.length; i++) {
+        if (locations[i].iw.enable === true) {
+          marker = new google.maps.Marker({
+            icon: "http://www.esflspain.org/wp-content/uploads/2018/01/marker.png",
+            position: new google.maps.LatLng(locations[i].lat, locations[i].lng),
+            map: map,
+            title: locations[i].title,
+            admin: locations[i].admin,
+            desc: locations[i].desc,
+            tel: locations[i].tel,
+            int_tel: locations[i].int_tel,
+            vicinity: locations[i].vicinity,
+            open: locations[i].open,
+            open_hours: locations[i].open_hours,
+            photo: locations[i].photo,
+            time: locations[i].time,
+            email: locations[i].email,
+            web: locations[i].web,
+            twitter: locations[i].twitter,
+            facebook: locations[i].facebook,
+            instagram: locations[i].instagram,
+            iw: locations[i].iw
+          });
+          markersArray.push(marker)
+          bindInfoWindow(marker, map, locations[i]);
+        }  
+      }
+    })
+  }
+
+  async function getLocations() {
+    let sheetId = "1FI6IrFr4ZiubKkt7fZIvwsMdtQAmqMII0uwhymwjeb0";
+    let sheetUrl = "https://sheets.googleapis.com/v4/spreadsheets/" + sheetId + "/?key=AIzaSyCy9jC9OBPL2v1MGkJL9p_N11kp1zyfPCo&includeGridData=true";
+    let response = await fetch(sheetUrl);
+    let data = await response.json();
+    let sheet = data.sheets[0].data[0].rowData;
+
+    sheet = sheet.filter(row => "userEnteredValue" in row.values[0]);
+    var headers = sheet[0].values
+                    .filter(cell =>"userEnteredValue" in cell)
+                    .map(cell => cell.userEnteredValue.stringValue);
+    sheet.shift();
+
+    sheet.forEach(row => {
+      row.values = row.values.map(cell => {
+        if ("userEnteredValue" in cell) {
+          if ("stringValue" in cell.userEnteredValue) {
+            if (cell.userEnteredValue.stringValue !== "") {
+              return cell.userEnteredValue.stringValue;
+            }
+          }
+        }
+        return null;
+      });
+    });
+
+    var entries = [];
+    sheet.forEach(row => {
+      var entry = {};
+      for (let index = 0; index < headers.length; index++) {
+        entry[headers[index]] = row.values[index] ? row.values[index] : null;
+      }
+      entries.push(entry);
+    });
+
+    return entries;
+  }
 </script>
 <style>
-    #mapkit-3925 {
-        height:400px;
-        width:100%;
-    }
+  #mapkit-3925 {
+    height: 100%;
+    width: 100%;
+  }
 </style>
 
-<div id='mapkit-3925'></div>
+<div id="mapkit-3925"></div>
